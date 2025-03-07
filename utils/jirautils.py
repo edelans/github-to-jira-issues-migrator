@@ -2,6 +2,8 @@ import migrationauth
 import requests
 from requests.auth import HTTPBasicAuth
 from pprint import pprint
+import re
+
 
 auth = HTTPBasicAuth(migrationauth.JIRA_EMAIL, migrationauth.JIRA_TOKEN)
 root_url = 'https://tricentis.atlassian.net'
@@ -113,6 +115,63 @@ def do_transition(issue_key, target_status_name):
     )
 
 
+def convert_gh_to_jira_markdown(string: str | None) -> str:
+    """deal with differences of formating in gh markdown compared to Jira"""
+    if not string:
+        return ''
+    
+    # Images
+    string = re.sub(r'!\[(.*?)\]\((.*?)\)', r'!\2!', string)
+    # Headers
+    string = re.sub(r'(###### )', 'h6. ', string)
+    string = re.sub(r'(##### )', 'h5. ', string)
+    string = re.sub(r'(#### )', 'h4. ', string)
+    string = re.sub(r'(### )', 'h3. ', string)
+    string = re.sub(r'(## )', 'h2. ', string)
+    string = re.sub(r'(# )', 'h1. ', string)
+    # Bold
+    string = string.replace('**', '*')
+    # Inline code
+    string = re.sub(r'`([^`\n]+?)`', r'{{\1}}', string)
+    # Code blocks with language
+    string = re.sub(
+        r'```(\w+)\n(.*?)```',
+        lambda m: f"{{code:{m.group(1)}}}{m.group(2)}{{code}}",
+        string,
+        flags=re.DOTALL
+    )
+    # Code blocks without language
+    string = re.sub(
+        r'```(.*?)```',
+        r'{code}\1{code}',
+        string,
+        flags=re.DOTALL
+    )
+    # Blockquotes
+    string = re.sub(
+        r'^> (.*)$',
+        r'{quote}\1{quote}',
+        string,
+        flags=re.MULTILINE
+    )
+    # Unordered lists
+    string = re.sub(
+        r'^(\s*)[-*] (.*)$',
+        lambda m: f"{m.group(1)}* {m.group(2)}",
+        string,
+        flags=re.MULTILINE
+    )
+    # Ordered lists
+    string = re.sub(
+        r'^(\s*)\d+\. (.*)$',
+        lambda m: f"{m.group(1)}# {m.group(2)}",
+        string,
+        flags=re.MULTILINE
+    )
+
+    return string
+
+
 def create_issue(props):
     """Create Jira issue"""
     # https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issues/#api-rest-api-3-issue-post
@@ -126,7 +185,7 @@ def create_issue(props):
         'issuetype': issue_type,
         'components': props['components'],
         'summary': props['summary'],
-        'description': props['description'],
+        'description': convert_gh_to_jira_markdown(props['description']),
         'reporter': props['reporter'],
         'assignee': props['assignee'],
         'priority': props['priority'],
