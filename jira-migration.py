@@ -127,6 +127,7 @@ for gh_issue in gh_issues:
     # Store issue mapping objects
     mapping_obj = {
         'gh_issue_number': gh_issue['number'],
+        'gh_issue_url': gh_url,
         'issue': jira_issue_input,
         'comments': jira_comment_input,
         'close_gh_issue': can_close
@@ -140,6 +141,7 @@ for gh_issue in gh_issues:
 issue_failures = []
 duplicate_issues = {}
 for jira_map in jira_mappings:
+
     gh_issue_url = jira_map['issue'][jirautils.gh_issue_field]
     gh_issue_title = jira_map['issue']['summary']
     # print(
@@ -159,8 +161,14 @@ for jira_map in jira_mappings:
 
     jira_api_url = ''
     jira_key = ''
+    backlink = f"\n\n---\nℹ️  This issue was migrated from GitHub issue {gh_issue_url}\n---"
+    jira_map["issue"]['description'] += backlink
+
+    print("jira_map just before issue creation: ")
+    pprint(jira_map)
     if not args.dry_run:
         create_response = jirautils.create_issue(jira_map["issue"])
+        
         if args.verbose:
             pprint(create_response)
         if 'self' in create_response:
@@ -174,9 +182,9 @@ for jira_map in jira_mappings:
         continue
 
     print(f'  * Adding comments from GitHub to new Jira issue {jira_key}')
-
     if not args.dry_run:
         for comment_map in jira_map['comments']:
+            print(comment_map)
             comment_response = jirautils.add_comment_from_url(
                 f'{jira_api_url}/comment', comment_map)
             if args.verbose:

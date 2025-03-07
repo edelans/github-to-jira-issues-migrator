@@ -279,9 +279,6 @@ def add_comment_from_url(api_url, props):
     """Add comment given API URL and props"""
 
     request_data = {
-        'visibility': {
-            'type': 'group',
-        },
         'body': props['body']
     }
 

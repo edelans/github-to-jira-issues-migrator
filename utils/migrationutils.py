@@ -30,13 +30,11 @@ def component_map(gh_labels, component_map):
             component_count += 1
             if label_name in component_map:
                 components.append({'name': component_map[label_name]})
-                if label_name.endswith("-ui"):
-                    is_ui = True
         elif label_name in component_map:
             component_count += 1
             components.append({'name': component_map[label_name]})
 
-    return components, component_count, is_ui
+    return components, component_count
 
 
 def type_map(gh_labels):
@@ -152,7 +150,7 @@ def issue_map(gh_issue, component_mapping, user_mapping, default_user):
     # - It's connected to Bugzilla
     # - It's a multi-squad issue
     can_close = True
-    components, component_count, is_ui = component_map(
+    components, component_count = component_map(
         gh_labels, component_mapping)
     if component_count > 1:
         can_close = False
@@ -183,8 +181,9 @@ def issue_map(gh_issue, component_mapping, user_mapping, default_user):
 
     # Handle labels
     labels = []
-    if is_ui:
-        labels.append('ui')
+    for label in gh_labels:
+        label_name = str(label['name'])
+        labels.append(label_name.replace(' ', '_'))
 
     issue_mapping = {
         'issuetype': {
