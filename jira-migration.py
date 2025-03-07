@@ -110,6 +110,7 @@ if len(gh_issues) == 0:
 
 # Iterate over GitHub issues and collect mapping objects
 for gh_issue in gh_issues:
+    pprint(gh_issue)
     gh_url = gh_issue['html_url']
     print(f'* Creating Jira mapping for {gh_url} ({gh_issue["title"]})')
 

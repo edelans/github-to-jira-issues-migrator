@@ -121,7 +121,7 @@ def convert_gh_to_jira_markdown(string: str | None) -> str:
         return ''
     
     # Images
-    string = re.sub(r'!\[(.*?)\]\((.*?)\)', r'!\2!', string)
+    string = re.sub(r'!\[(.*?)\]\((.*?)\)', r'[image on github repo|\2]', string)
     # Headers
     string = re.sub(r'(###### )', 'h6. ', string)
     string = re.sub(r'(##### )', 'h5. ', string)
