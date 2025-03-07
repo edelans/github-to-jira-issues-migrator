@@ -1,18 +1,19 @@
 import migrationauth
 import requests
+from requests.auth import HTTPBasicAuth
+from pprint import pprint
 
+auth = HTTPBasicAuth(migrationauth.JIRA_EMAIL, migrationauth.JIRA_TOKEN)
 root_url = 'https://tricentis.atlassian.net'
 base_url = f'{root_url}/rest/api/latest'
 html_url = f'{root_url}/browse'
 issue_url = f'{base_url}/issue'
 project_key = 'WAL'
-security_level = 'Tricentis Employee'  # To be safe, restrict to RH Employees
 gh_issue_field = 'customfield_12316846'
 data = {
     'projectKeys': project_key
 }
 headers = {
-    'Authorization': f'Bearer {migrationauth.JIRA_TOKEN}',
     'Content-Type': 'application/json',
 }
 
@@ -29,6 +30,7 @@ def get_user(user_query):
         url,
         headers=headers,
         params=data,
+        auth=auth
     )
 
     if not response.ok:
@@ -48,6 +50,7 @@ def get_issue_types():
         url,
         headers=headers,
         params=data,
+        auth=auth
     )
 
     return response.json()['projects'][0]['issuetypes']
@@ -66,6 +69,7 @@ def get_issue_meta(issue_type_name):
         url,
         headers=headers,
         params=request_data,
+        auth=auth
     )
 
     return response.json()['projects'][0]['issuetypes'][0]
@@ -82,6 +86,7 @@ def get_transitions(issue_key):
     return requests.get(
         url,
         headers=headers,
+        auth=auth,
         json=data
     ).json()
 
@@ -103,7 +108,8 @@ def do_transition(issue_key, target_status_name):
     return requests.post(
         url,
         headers=headers,
-        json=data
+        json=data,
+        auth=auth
     )
 
 
@@ -117,9 +123,6 @@ def create_issue(props):
         'project': {
             'key': project_key
         },
-        'security': {
-            'name': security_level
-        },
         'issuetype': issue_type,
         'components': props['components'],
         'summary': props['summary'],
@@ -132,11 +135,13 @@ def create_issue(props):
         # Custom "GitHub Issue" field
         # gh_issue_field: props[gh_issue_field]
     }
+    pprint(request_data)
 
     response = requests.post(
         url,
         json={'fields': request_data},
         headers=headers,
+        auth=auth
     )
 
     if not response.ok:
@@ -161,7 +166,8 @@ def update_issue(issue_key, data):
     return requests.put(
         url,
         headers=headers,
-        json=request_data
+        json=request_data,
+        auth=auth
     )
 
 
@@ -171,6 +177,7 @@ def get_issue_from_url(api_url):
     return requests.get(
         api_url,
         headers=headers,
+        auth=auth
     )
 
 
@@ -193,6 +200,7 @@ def search_issues(jql_query):
     return requests.post(
         url,
         headers=headers,
+        auth=auth,
         json={
             'jql': jql_query,
             # 'fields': ['status']
@@ -214,7 +222,6 @@ def add_comment_from_url(api_url, props):
     request_data = {
         'visibility': {
             'type': 'group',
-            'value': security_level
         },
         'body': props['body']
     }
@@ -222,6 +229,7 @@ def add_comment_from_url(api_url, props):
     response = requests.post(
         api_url,
         headers=headers,
+        auth=auth,
         json=request_data
     )
 

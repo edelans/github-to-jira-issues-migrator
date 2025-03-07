@@ -199,15 +199,16 @@ for jira_map in jira_mappings:
     if not args.dry_run:
         comment_response = ghutils.add_issue_comment(
             gh_issue_number, gh_comment)
+        print('  * Migration comment added to the gh issue')
         if args.verbose:
             pprint(comment_response)
-            print('  * Migration comment added to the gh issue')
+            
 
     # Add migration label if allowed
     print('  * Handling GitHub issue labels and closing issue if allowed')
     if not args.dry_run:
         label_response = ghutils.add_issue_label(
-            gh_issue_number, squad_completion_label)
+            gh_issue_number, completion_label)
         if args.verbose:
             pprint(label_response)
 
