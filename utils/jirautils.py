@@ -1,17 +1,13 @@
 import migrationauth
 import requests
 
-root_url = 'https://issues.redhat.com'
+root_url = 'https://tricentis.atlassian.net'
 base_url = f'{root_url}/rest/api/latest'
 html_url = f'{root_url}/browse'
 issue_url = f'{base_url}/issue'
-project_key = 'ACM'
-security_level = 'Red Hat Employee'  # To be safe, restrict to RH Employees
-contributors_field = 'customfield_12315950'
-epic_field = 'customfield_12311141'
+project_key = 'WAL'
+security_level = 'Tricentis Employee'  # To be safe, restrict to RH Employees
 gh_issue_field = 'customfield_12316846'
-severity_field = 'customfield_12316142'
-story_points_field = 'customfield_12310243'
 data = {
     'projectKeys': project_key
 }
@@ -24,9 +20,9 @@ headers = {
 def get_user(user_query):
     """Get user object from query (username, name, or e-mail)"""
 
-    url = f'{base_url}/user/search'
+    url = f'{base_url}/user'
     data = {
-        'username': user_query
+        'accountId': user_query
     }
 
     response = requests.get(
@@ -37,7 +33,7 @@ def get_user(user_query):
 
     if not response.ok:
         print(
-            f"An unexpected response was returned from Jira: {response} {response.reason}")
+            f"An unexpected response was returned from Jira while trying to get user {user_query}: {response} {response.reason}")
         exit(1)
 
     return response.json()
@@ -113,6 +109,7 @@ def do_transition(issue_key, target_status_name):
 
 def create_issue(props):
     """Create Jira issue"""
+    # https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issues/#api-rest-api-3-issue-post
 
     url = issue_url
     issue_type = props['issuetype']
@@ -130,22 +127,11 @@ def create_issue(props):
         'reporter': props['reporter'],
         'assignee': props['assignee'],
         'priority': props['priority'],
-        'fixVersions': props['fixVersions'],
         'labels': props['labels'],
-        # Custom "Contributors" field
-        contributors_field: props[contributors_field],
-        # Custom "Story Points" field
-        story_points_field: props[story_points_field],
-        # Custom "GitHub Issue" field
-        gh_issue_field: props[gh_issue_field]
-    }
 
-    if issue_type['name'] == 'Epic':
-        # Custom "Epic Name" field
-        request_data[epic_field] = props[epic_field]
-    elif issue_type['name'] == 'Bug':
-        # Custom "Severity" field
-        request_data[severity_field] = props[severity_field]
+        # Custom "GitHub Issue" field
+        # gh_issue_field: props[gh_issue_field]
+    }
 
     response = requests.post(
         url,
@@ -155,7 +141,7 @@ def create_issue(props):
 
     if not response.ok:
         print(
-            f'* An unexpected response was returned from Jira: {response} {response.reason}')
+            f'* An unexpected response was returned from Jira during issue creation: {response} {response.reason}')
         print(response.json())
         exit(1)
 
@@ -200,6 +186,7 @@ def get_single_issue(issue_key):
 
 def search_issues(jql_query):
     """Get issues based on JQL query"""
+    # https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-search/#api-rest-api-3-search-post
 
     url = f'{base_url}/search'
 

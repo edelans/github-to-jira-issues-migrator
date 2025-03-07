@@ -99,6 +99,7 @@ if args.component_name:
 # Collect GitHub issues using query config or CLI
 label_exclusions = f'{completion_label},{squad_completion_label},{label_exclusions}'
 gh_issues = ghutils.get_issues_by_label(label_filter, label_exclusions)
+print(f'* Recovered {len(gh_issues)} issues to be migrated')
 
 jira_mappings = []
 
@@ -140,17 +141,17 @@ duplicate_issues = {}
 for jira_map in jira_mappings:
     gh_issue_url = jira_map['issue'][jirautils.gh_issue_field]
     gh_issue_title = jira_map['issue']['summary']
-    print(
-        '* Checking for issues already linked to GitHub issue ' +
-        f'{gh_issue_url} ({gh_issue_title})')
+    # print(
+    #     '* Checking for issues already linked to GitHub issue ' +
+    #     f'{gh_issue_url} ({gh_issue_title})')
 
-    custom_field_index = jirautils.gh_issue_field.split('_')[1]
-    custom_field = f'cf[{custom_field_index}]'
-    duplicate_list = jirautils.search_issues(
-        f'{custom_field} = "{gh_issue_url}"')['issues']
-    if len(duplicate_list) > 0:
-        duplicate_issues[gh_issue_url] = list(
-            map(lambda issue: issue['key'], duplicate_list))
+    # custom_field_index = jirautils.gh_issue_field.split('_')[1]
+    # custom_field = f'cf[{custom_field_index}]'
+    # duplicate_list = jirautils.search_issues(
+    #     f'{custom_field} = "{gh_issue_url}"')['issues']
+    # if len(duplicate_list) > 0:
+    #     duplicate_issues[gh_issue_url] = list(
+    #         map(lambda issue: issue['key'], duplicate_list))
 
     print(
         f'* Creating Jira issue for {gh_issue_url} ({gh_issue_title})')
@@ -171,7 +172,7 @@ for jira_map in jira_mappings:
         issue_failures.append(gh_issue_url)
         continue
 
-    print(f'* Adding comments from GitHub to new Jira issue {jira_key}')
+    print(f'  * Adding comments from GitHub to new Jira issue {jira_key}')
 
     if not args.dry_run:
         for comment_map in jira_map['comments']:
@@ -180,14 +181,12 @@ for jira_map in jira_mappings:
             if args.verbose:
                 pprint(comment_response)
 
-    print(
-        f'* Adjusting status of Jira issue to match ZenHub pipeline {jira_key}')
-    if not args.dry_run:
-        if jira_map['issue']['status']:
-            transition_response = jirautils.do_transition(
-                jira_key, jira_map['issue']['status'])
-            if args.verbose:
-                pprint(transition_response)
+    # if not args.dry_run:
+    #     if jira_map['issue']['status']:
+    #         transition_response = jirautils.do_transition(
+    #             jira_key, jira_map['issue']['status'])
+    #         if args.verbose:
+    #             pprint(transition_response)
 
     # Add comment in GH issue with link to new Jira issue
     gh_issue_number = jira_map['gh_issue_number']
@@ -202,24 +201,15 @@ for jira_map in jira_mappings:
             gh_issue_number, gh_comment)
         if args.verbose:
             pprint(comment_response)
+            print('  * Migration comment added to the gh issue')
 
-    # Add migration label and close GH issue if allowed
-    print('* Handling GitHub issue labels and closing issue if allowed')
+    # Add migration label if allowed
+    print('  * Handling GitHub issue labels and closing issue if allowed')
     if not args.dry_run:
-        if jira_map['close_gh_issue']:
-            label_response = ghutils.add_issue_label(
-                gh_issue_number, completion_label)
-            if args.verbose:
-                pprint(label_response)
-            close_response = ghutils.close_issue(gh_issue_number)
-            if args.verbose:
-                pprint(close_response)
-        else:
-            # We're not closing, so add squad-level migration label
-            label_response = ghutils.add_issue_label(
-                gh_issue_number, squad_completion_label)
-            if args.verbose:
-                pprint(label_response)
+        label_response = ghutils.add_issue_label(
+            gh_issue_number, squad_completion_label)
+        if args.verbose:
+            pprint(label_response)
 
 if len(issue_failures) > 0:
     print('* Failed to create Jira issues for:')

@@ -1,7 +1,7 @@
 import migrationauth
 import requests
 
-org_repo = 'stolostron/backlog'
+org_repo = 'waldoapp/Product-Design'
 root_url = 'https://api.github.com/repos'
 base_url = f'{root_url}/{org_repo}/issues'
 

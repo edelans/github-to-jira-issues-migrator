@@ -1,27 +1,21 @@
 import utils.ghutils as ghutils
 import utils.jirautils as jirautils
-import utils.zenhubutils as zenhubutils
 
 jira_product_versions = {}
 gh_repo_id = ""
 
 
 def user_map(gh_username, user_mapping, default_user=''):
-    """Return the user e-mail from the usermap"""
+    """Return the jira account id from the usermap"""
     assert user_mapping != None  # user_mapping cannot be None
 
     user = None
-    user_email = default_user
+    user_id = default_user
 
     if gh_username in user_mapping:
-        user_email = user_mapping[gh_username]
+        user_id = user_mapping[gh_username]
 
-    if user_email != '':
-        user_query = jirautils.get_user(user_email)
-        if user_query and len(user_query) > 0:
-            user = {'name': user_query[0]['name']}
-
-    return user
+    return {"id": user_id}
 
 
 def component_map(gh_labels, component_map):
@@ -147,14 +141,6 @@ def status_map(pipeline, issue_type):
     return None
 
 
-def should_close(gh_issue):
-    """Return the whether an issue has a label signaling it should not be closed"""
-
-    no_close_labels = 'bugzilla,canary-failure'
-
-    return ghutils.has_label(gh_issue, no_close_labels)
-
-
 def issue_map(gh_issue, component_mapping, user_mapping, default_user):
     """Return a dict for Jira to process from a given GitHub issue"""
     assert user_mapping != None  # user_mapping cannot be None
@@ -168,7 +154,7 @@ def issue_map(gh_issue, component_mapping, user_mapping, default_user):
     can_close = True
     components, component_count, is_ui = component_map(
         gh_labels, component_mapping)
-    if component_count > 1 or should_close(gh_issue):
+    if component_count > 1:
         can_close = False
 
     assignee = None
@@ -194,26 +180,6 @@ def issue_map(gh_issue, component_mapping, user_mapping, default_user):
     if gh_repo_id == "":
         gh_repo_id = str(ghutils.get_repo()['id'])
     
-    # Gather ZenHub issue data
-    zenhub_data = zenhubutils.get_issue_data(
-        gh_repo_id, str(gh_issue['number']))
-
-    releases = []
-    for release in zenhub_data['releases']:
-        # Only fetch if not already populated
-        if not issue_type in jira_product_versions:
-            version_response = jirautils.get_issue_meta(
-                issue_type)['fields']['fixVersions']['allowedValues']
-            if len(version_response) > 0:
-                jira_product_versions[issue_type] = list(
-                    map(lambda version: version['name'], version_response))
-
-        for version in jira_product_versions[issue_type]:
-            if version == release:
-                releases.append({
-                    'name': release
-                })
-                break
 
     # Handle labels
     labels = []
@@ -229,22 +195,10 @@ def issue_map(gh_issue, component_mapping, user_mapping, default_user):
         'description': issue_body,
         'reporter': user_map(gh_issue['user']['login'], user_mapping, default_user),
         'assignee': assignee,
-        jirautils.contributors_field: contributors,
-        'status': status_map(zenhub_data['pipeline'], issue_type),
         'priority': priority_map(gh_labels),
-        'fixVersions': releases,
         'labels': labels,
-        jirautils.story_points_field: zenhub_data['estimate'],
         jirautils.gh_issue_field: gh_issue['html_url']
     }
-
-    if issue_type == 'Epic':
-        # Custom "Epic Name" field
-        issue_mapping[jirautils.epic_field] = issue_title
-
-    if issue_type == 'Bug':
-        # Custom "Severity" field
-        issue_mapping[jirautils.severity_field] = severity_map(gh_labels)
 
     return issue_mapping, can_close
 
