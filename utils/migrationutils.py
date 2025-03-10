@@ -18,25 +18,6 @@ def user_map(gh_username, user_mapping, default_user=''):
     return {"id": user_id}
 
 
-def component_map(gh_labels, component_map):
-    """Return the Jira components from a given GitHub label"""
-
-    components = []
-    component_count = 0
-    is_ui = False
-    for label in gh_labels:
-        label_name = str(label['name'])
-        if label_name.startswith('squad:'):
-            component_count += 1
-            if label_name in component_map:
-                components.append({'name': component_map[label_name]})
-        elif label_name in component_map:
-            component_count += 1
-            components.append({'name': component_map[label_name]})
-
-    return components, component_count
-
-
 def type_map(gh_labels):
     """Return the Jira issue type from a given GitHub label"""
 
@@ -139,21 +120,11 @@ def status_map(pipeline, issue_type):
     return None
 
 
-def issue_map(gh_issue, component_mapping, user_mapping, default_user):
+def issue_map(gh_issue, user_mapping, default_user):
     """Return a dict for Jira to process from a given GitHub issue"""
     assert user_mapping != None  # user_mapping cannot be None
 
     gh_labels = gh_issue['labels']
-
-    # Flag for whether the GitHub issue can be closed after migration
-    # Don't close the issue if:
-    # - It's connected to Bugzilla
-    # - It's a multi-squad issue
-    can_close = True
-    components, component_count = component_map(
-        gh_labels, component_mapping)
-    if component_count > 1:
-        can_close = False
 
     assignee = None
     contributors = []
@@ -189,7 +160,7 @@ def issue_map(gh_issue, component_mapping, user_mapping, default_user):
         'issuetype': {
             'name': issue_type
         },
-        'components': components,
+        'components': [{'name': ghutils.repo}],
         'summary': issue_title,
         'description': issue_body,
         'reporter': user_map(gh_issue['user']['login'], user_mapping, default_user),
@@ -199,7 +170,7 @@ def issue_map(gh_issue, component_mapping, user_mapping, default_user):
         jirautils.gh_issue_field: gh_issue['html_url']
     }
 
-    return issue_mapping, can_close
+    return issue_mapping
 
 
 def comment_map(gh_comment):

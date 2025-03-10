@@ -22,10 +22,7 @@ except:
     print('* Warning: user_map.json not found. This may be ignored if user_map is supplied in config.json or isn\'t used.')
 
 user_map = {}
-component_map = {}
 if config_json:
-    if 'component_map' in config_json:
-        component_map = config_json['component_map']
     if user_map_json:
         user_map = user_map_json
     elif 'user_map' in config_json:
@@ -43,7 +40,6 @@ label_filter = ''
 label_exclusions = ''
 completion_label = ''
 squad_completion_label = ''
-component_name = ''
 
 # Parse config file
 if 'label_filter' in config_json:
@@ -54,8 +50,6 @@ if 'completion_label' in config_json:
     completion_label = config_json['completion_label']
 if 'squad_completion_label' in config_json:
     squad_completion_label = config_json['squad_completion_label']
-if 'component_name' in config_json:
-    component_name = config_json['component_name']
 
 # Parse CLI arguments (these override the config file)
 description = 'Utility to migrate issues from GitHub to Jira'
@@ -72,9 +66,6 @@ parser.add_argument(
 parser.add_argument(
     '-s', '--squad-completion-label',
     help='Label to filter/add for issues that have been migrated for non-closeable issues')
-parser.add_argument(
-    '-m', '--component-name',
-    help='Name of the squad or component for messages')
 parser.add_argument(
     '-v', '--verbose',
     default=False, action='store_true',
@@ -93,8 +84,6 @@ if args.completion_label:
     completion_label = args.completion_label
 if args.squad_completion_label:
     squad_completion_label = args.squad_completion_label
-if args.component_name:
-    component_name = args.component_name
 
 # Collect GitHub issues using query config or CLI
 label_exclusions = f'{completion_label},{squad_completion_label},{label_exclusions}'
@@ -114,8 +103,8 @@ for gh_issue in gh_issues:
     gh_url = gh_issue['html_url']
     print(f'* Creating Jira mapping for {gh_url} ({gh_issue["title"]})')
 
-    jira_issue_input, can_close = migrationutils.issue_map(
-        gh_issue, component_map, user_map, default_user)
+    jira_issue_input = migrationutils.issue_map(
+        gh_issue, user_map, default_user)
 
     # Collect comments from the GitHub issue
     gh_comments = ghutils.get_issue_comments(gh_issue)
@@ -130,7 +119,6 @@ for gh_issue in gh_issues:
         'gh_issue_url': gh_url,
         'issue': jira_issue_input,
         'comments': jira_comment_input,
-        'close_gh_issue': can_close
     }
     jira_mappings.append(mapping_obj)
 
@@ -200,10 +188,7 @@ for jira_map in jira_mappings:
     # Add comment in GH issue with link to new Jira issue
     gh_issue_number = jira_map['gh_issue_number']
     jira_html_url = f'{jirautils.html_url}/{jira_key}'
-    gh_comment = 'This issue has been migrated to Jira'
-    if component_name != '':
-        gh_comment += f' for {component_name}'
-    gh_comment += f': {jira_html_url}'
+    gh_comment = f'This issue has been migrated to Jira: {jira_html_url}'
 
     if not args.dry_run:
         comment_response = ghutils.add_issue_comment(
