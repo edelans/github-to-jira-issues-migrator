@@ -34,8 +34,7 @@ long, you'll be able to verify data that is being passed to Jira.
 $ python3 jira-migration.py --help
 
 usage: jira-migration.py [-h] [-l LABEL_FILTER] [-e LABEL_EXCLUSIONS]
-                         [-c COMPLETION_LABEL] [-s SQUAD_COMPLETION_LABEL]
-                         [-m COMPONENT_NAME] [-v] [--dry-run]
+                         [-c COMPLETION_LABEL] [-v] [--dry-run]
 
 Utility to migrate issues from GitHub to Jira
 
@@ -47,11 +46,6 @@ options:
                         Exclude issues by GitHub label (comma separated list)
   -c COMPLETION_LABEL, --completion-label COMPLETION_LABEL
                         Label to filter/add for issues that have been migrated
-  -s SQUAD_COMPLETION_LABEL, --squad-completion-label SQUAD_COMPLETION_LABEL
-                        Label to filter/add for issues that have been migrated
-                        for non-closeable issues
-  -m COMPONENT_NAME, --component-name COMPONENT_NAME
-                        Name of the squad or component for messages
   -v, --verbose         Print additional logs for debugging
   --dry-run             Only run get operations and don't update/create issues
 ```
