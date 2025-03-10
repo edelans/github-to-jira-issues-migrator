@@ -3,6 +3,8 @@ import requests
 from requests.auth import HTTPBasicAuth
 from pprint import pprint
 import re
+import os
+import utils.ghutils as ghutils
 
 
 auth = HTTPBasicAuth(migrationauth.JIRA_EMAIL, migrationauth.JIRA_TOKEN)
@@ -17,6 +19,7 @@ data = {
 }
 headers = {
     'Content-Type': 'application/json',
+    "Accept": "application/json",
 }
 
 
@@ -115,13 +118,28 @@ def do_transition(issue_key, target_status_name):
     )
 
 
-def convert_gh_to_jira_markdown(string: str | None) -> str:
-    """deal with differences of formating in gh markdown compared to Jira"""
+
+def convert_gh_to_jira_markdown(string: str | None, gh_issue_number: int) -> (str, list):
+    """Convert GitHub Markdown to Jira formatting and download images beforehand."""
     if not string:
-        return ''
-    
-    # Images
-    string = re.sub(r'!\[(.*?)\]\((.*?)\)', r'[image on github repo|\2]', string)
+        return '', []
+
+    attachments = []  # Store downloaded image paths
+
+    def replace_image(match):
+        """Download image and replace with placeholder."""
+        alt_text, url = match.groups()
+        filepath = ghutils.download_image_from_github(gh_issue_number, url)
+
+        if filepath:
+            attachments.append(filepath)
+            return f"!{os.path.basename(filepath)}!"  # Temporary placeholder
+        return f"[image on GitHub|{url}]"  # If download fails
+
+    # Convert Markdown images and store attachment file paths
+    string = re.sub(r'!\[(.*?)\]\((.*?)\)', replace_image, string)
+
+
     # Headers
     string = re.sub(r'(###### )', 'h6. ', string)
     string = re.sub(r'(##### )', 'h5. ', string)
@@ -169,7 +187,27 @@ def convert_gh_to_jira_markdown(string: str | None) -> str:
         flags=re.MULTILINE
     )
 
-    return string
+    return string, attachments
+    
+
+def upload_image_to_jira(issue_key, filepath):
+    """Upload an image to JIRA and return the filename."""
+    with open(filepath, "rb") as file:
+        headers = {'X-Atlassian-Token': 'no-check'}
+        response = requests.post(
+            f"{issue_url}/{issue_key}/attachments",
+            auth=auth,
+            headers=headers,
+            files={'file': (filepath, file)}
+        )
+
+    if response.status_code == 200:
+        filename = os.path.basename(filepath)
+        print(f"✅ Uploaded image to JIRA: {filename}")
+        return filename
+    else:
+        print(f"❌ Failed to upload image {filepath} (Code {response.status_code})")
+        return None
 
 
 def create_issue(props):
@@ -178,38 +216,47 @@ def create_issue(props):
 
     url = issue_url
     issue_type = props['issuetype']
+    gh_issue_number = ghutils.extract_issue_number(props[gh_issue_field])
+    converted_description, image_paths = convert_gh_to_jira_markdown(props['description'], gh_issue_number)
+
     request_data = {
-        'project': {
-            'key': project_key
-        },
-        'issuetype': issue_type,
-        'components': props['components'],
-        'summary': props['summary'],
-        'description': convert_gh_to_jira_markdown(props['description']),
-        'reporter': props['reporter'],
-        'assignee': props['assignee'],
-        'priority': props['priority'],
-        'labels': props['labels'],
-
-        # Custom "GitHub Issue" field
-        # gh_issue_field: props[gh_issue_field]
+        'fields': {
+            'project': {'key': project_key},
+            'issuetype': issue_type,
+            'components': props['components'],
+            'summary': props['summary'],
+            'description': converted_description,  # Add converted description
+            'reporter': props['reporter'],
+            'assignee': props['assignee'],
+            'priority': props['priority'],
+            'labels': props['labels']
+        }
     }
-    pprint(request_data)
 
+    # Step 3: Create the issue in JIRA
+    pprint(request_data)
     response = requests.post(
         url,
-        json={'fields': request_data},
+        json=request_data,
         headers=headers,
         auth=auth
     )
 
     if not response.ok:
-        print(
-            f'* An unexpected response was returned from Jira during issue creation: {response} {response.reason}')
+        print(f"❌ Failed to create issue in JIRA: {response.status_code} {response.reason}")
         print(response.json())
         exit(1)
 
-    return response.json()
+    issue_key = response.json().get("key")
+    print(f"✅ Created JIRA issue: {issue_key}")
+
+    # Step 4: Upload attachments (images)
+    if image_paths:
+        print("📎 Uploading attachments...")
+        for image_path in image_paths:
+            upload_image_to_jira(issue_key, image_path)
+
+    return issue_key
 
 
 def update_issue(issue_key, data):
