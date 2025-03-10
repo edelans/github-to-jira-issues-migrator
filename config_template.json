@@ -2,8 +2,6 @@
   "label_filter": "",
   "label_exclusions": "",
   "completion_label": "",
-  "component_name": "",
-  "squad_completion_label": "",
   "default_jira_user": "jira-username/name/email",
   "component_map": {
     "gh-label": "jira-component"

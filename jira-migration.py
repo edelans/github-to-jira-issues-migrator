@@ -39,7 +39,6 @@ else:
 label_filter = ''
 label_exclusions = ''
 completion_label = ''
-squad_completion_label = ''
 
 # Parse config file
 if 'label_filter' in config_json:
@@ -48,8 +47,6 @@ if 'label_exclusions' in config_json:
     label_exclusions = config_json['label_exclusions']
 if 'completion_label' in config_json:
     completion_label = config_json['completion_label']
-if 'squad_completion_label' in config_json:
-    squad_completion_label = config_json['squad_completion_label']
 
 # Parse CLI arguments (these override the config file)
 description = 'Utility to migrate issues from GitHub to Jira'
@@ -82,11 +79,9 @@ if args.label_exclusions:
     label_exclusions = args.label_exclusions
 if args.completion_label:
     completion_label = args.completion_label
-if args.squad_completion_label:
-    squad_completion_label = args.squad_completion_label
 
 # Collect GitHub issues using query config or CLI
-label_exclusions = f'{completion_label},{squad_completion_label},{label_exclusions}'
+label_exclusions = f'{completion_label},{label_exclusions}'
 gh_issues = ghutils.get_issues_by_label(label_filter, label_exclusions)
 print(f'* Recovered {len(gh_issues)} issues to be migrated')
 
