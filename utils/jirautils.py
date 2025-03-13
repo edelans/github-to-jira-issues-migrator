@@ -139,6 +139,8 @@ def convert_gh_to_jira_markdown(string: str | None) -> (str, list):
     # Convert Markdown images and store attachment file paths
     string = re.sub(r'!\[(.*?)\]\((.*?)\)', replace_image, string)
 
+    # Convert Markdown links: [text](url) → [text|url]
+    string = re.sub(r'\[(.*?)\]\((.*?)\)', r'[\1|\2]', string)
 
     # Headers
     string = re.sub(r'(###### )', 'h6. ', string)
