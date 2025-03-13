@@ -2,7 +2,7 @@ import migrationauth
 import requests
 import os
 
-repo = 'android-services'
+repo = 'webapp'
 org_repo = 'waldoapp/'+ repo
 root_url = 'https://api.github.com/repos'
 base_url = f'{root_url}/{org_repo}/issues'

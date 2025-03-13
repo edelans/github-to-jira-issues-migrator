@@ -233,7 +233,7 @@ def create_issue(props):
     }
 
     # Step 3: Create the issue in JIRA
-    pprint(request_data)
+    #pprint(request_data)
     response = requests.post(
         url,
         json=request_data,

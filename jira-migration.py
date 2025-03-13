@@ -94,7 +94,8 @@ if len(gh_issues) == 0:
 
 # Iterate over GitHub issues and collect mapping objects
 for gh_issue in gh_issues:
-    pprint(gh_issue)
+    if args.verbose:
+        pprint(gh_issue)
     gh_url = gh_issue['html_url']
     print(f'* Creating Jira mapping for {gh_url} ({gh_issue["title"]})')
 
@@ -147,8 +148,10 @@ for jira_map in jira_mappings:
     backlink = f"\n\n---\nℹ️  This issue was migrated from GitHub issue {gh_issue_url}\n---"
     jira_map["issue"]['description'] += backlink
 
-    print("jira_map just before issue creation: ")
-    pprint(jira_map)
+    if args.verbose:
+        print("jira_map just before issue creation: ")
+        pprint(jira_map)
+
     if not args.dry_run:
         create_response = jirautils.create_issue(jira_map["issue"])
         
@@ -167,7 +170,8 @@ for jira_map in jira_mappings:
     print(f'  * Adding comments from GitHub to new Jira issue {jira_key}')
     if not args.dry_run:
         for comment_map in jira_map['comments']:
-            print(comment_map)
+            if args.verbose:
+                print(comment_map)
             comment_response = jirautils.add_comment_from_url(
                 f'{jira_api_url}/comment', comment_map)
             if args.verbose:
