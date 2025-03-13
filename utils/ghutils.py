@@ -1,9 +1,8 @@
 import migrationauth
 import requests
 import os
-import re
 
-repo = 'Product-Design'
+repo = 'android-services'
 org_repo = 'waldoapp/'+ repo
 root_url = 'https://api.github.com/repos'
 base_url = f'{root_url}/{org_repo}/issues'
@@ -148,53 +147,25 @@ def add_issue_comment(issue_number, comment):
     return response.json()
 
 
-def get_real_image_url(issue_number, image_url):
-    """Fetch the GitHub issue and extract the correct image URL."""
-    url = f"{base_url}/{issue_number}"  # GitHub API issue endpoint
-    headers = {
-        "Authorization": f"token {migrationauth.GH_TOKEN}",
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "GitHub-Issue-Migrator"
-    }
-
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        issue_data = response.json()
-        
-        # Check if the correct image URL exists in the API response
-        for comment in issue_data.get("comments", []):
-            if image_url in comment.get("body", ""):
-                return image_url  # Use the provided URL if it's directly referenced
-
-    print(f"⚠️ No direct API image URL found for {image_url}")
-    return None  # Prevent download attempt
-
-def download_image_from_github(issue_number, image_url, save_dir="images"):
-    """Download an image from GitHub API if it's a private attachment."""
+def download_image_with_cookie(image_url, save_dir="images"):
+    """Download a private GitHub image using a browser session cookie.
+    When accessing the GitHub user-attachments URL from a private repo, I was getting an SSO sign-in request instead of the image because GitHub’s API token is not enough when SSO is enforced.
+As in our case it's just needed for a one-off for a migration, I ended up authenticating my requests with a browser session cookie, and was able to programmatically download the images of the issue. """
     
     os.makedirs(save_dir, exist_ok=True)
-    filename = image_url.split("/")[-1]
+    filename = image_url.split("/")[-1] + ".png"
     filepath = os.path.join(save_dir, filename)
 
-    real_image_url = get_real_image_url(issue_number, image_url)
-    if not real_image_url:
-        print(f"❌ No valid download URL found for image: {image_url}")
-        return None
-
     headers = {
-        "Authorization": f"token {migrationauth.GH_TOKEN}",
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "GitHub-Issue-Migrator"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+        "Cookie": migrationauth.GH_SESSION_COOKIE,  # Use browser session cookie
+        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",  # Correct accept header for images
+        "Referer": "https://github.com/",  # Add referer to mimic browser request
     }
 
-    response = requests.get(real_image_url, headers=headers, stream=True, allow_redirects=True)
+    response = requests.get(image_url, headers=headers, stream=True, allow_redirects=True)
 
-    # If response is HTML, it's an authentication page, not an image
-    if "text/html" in response.headers.get("Content-Type", ""):
-        print(f"⚠️ Still receiving an authentication page for {image_url}. Check SSO settings.")
-        return None
-
-    if response.status_code == 200:
+    if response.status_code == 200 and "image" in response.headers.get("Content-Type", ""):
         with open(filepath, "wb") as file:
             for chunk in response.iter_content(1024):
                 file.write(chunk)
@@ -203,9 +174,3 @@ def download_image_from_github(issue_number, image_url, save_dir="images"):
     else:
         print(f"❌ Failed to download image: {image_url} (Code {response.status_code})")
         return None
-    
-
-def extract_issue_number(url: str) -> int | None:
-    """Extract the issue number from a GitHub issue URL."""
-    match = re.search(r'/issues/(\d+)$', url)
-    return int(match.group(1)) if match else None

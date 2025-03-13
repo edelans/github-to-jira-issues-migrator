@@ -119,7 +119,7 @@ def do_transition(issue_key, target_status_name):
 
 
 
-def convert_gh_to_jira_markdown(string: str | None, gh_issue_number: int) -> (str, list):
+def convert_gh_to_jira_markdown(string: str | None) -> (str, list):
     """Convert GitHub Markdown to Jira formatting and download images beforehand."""
     if not string:
         return '', []
@@ -129,7 +129,7 @@ def convert_gh_to_jira_markdown(string: str | None, gh_issue_number: int) -> (st
     def replace_image(match):
         """Download image and replace with placeholder."""
         alt_text, url = match.groups()
-        filepath = ghutils.download_image_from_github(gh_issue_number, url)
+        filepath = ghutils.download_image_with_cookie(url)
 
         if filepath:
             attachments.append(filepath)
@@ -216,8 +216,7 @@ def create_issue(props):
 
     url = issue_url
     issue_type = props['issuetype']
-    gh_issue_number = ghutils.extract_issue_number(props[gh_issue_field])
-    converted_description, image_paths = convert_gh_to_jira_markdown(props['description'], gh_issue_number)
+    converted_description, image_paths = convert_gh_to_jira_markdown(props['description'])
 
     request_data = {
         'fields': {
@@ -256,7 +255,7 @@ def create_issue(props):
         for image_path in image_paths:
             upload_image_to_jira(issue_key, image_path)
 
-    return issue_key
+    return response.json()
 
 
 def update_issue(issue_key, data):

@@ -210,3 +210,4 @@ if len(duplicate_issues) > 0:
     print('* Duplicate issues detected for review:')
     for issue in duplicate_issues:
         print(f'  {issue}: {duplicate_issues[issue]}')
+
