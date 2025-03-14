@@ -88,7 +88,9 @@ different use case:
 Skip the setup : I offer a done-for-you migration service for a few hundred dollars (depending on customization needs). You'll get:
 
 ✅ A fully managed migration, tailored to your use case
+
 ✅ A simple credit card payment link + invoice for easy expensing (no procurement delays or headaches)
+
 ✅ A seamless transition so your devs can focus on what matters
 
 📩 Interested? Contact me here: [Migration Request Form](https://docs.google.com/forms/d/e/1FAIpQLSdF-CFw37gvnL2e2-IYMq3gTLhsLsMNbTGL_B_pv5lkftTDDA/viewform?usp=header), and let's make it happen! 🚀
