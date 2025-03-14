@@ -1,20 +1,23 @@
 # GitHub to Jira Migration
 
-This project was forked from https://github.com/dhaiducek/github-to-jira-migration, itself argely inspired by the blog
+A tool to migrate your Github issues into Jira issues.
+
+This project is a fork from https://github.com/dhaiducek/github-to-jira-migration, itself largely inspired by the blog
 [How to migrate GitHub issues to Jira](https://zmcddn.github.io/how-to-migrate-github-issues-to-jira.html) by
 [@zmcddn](https://github.com/zmcddn).
+This fork is independent of the original project and is not affiliated with or endorsed by its original authors. It includes additional improvements and a migration service for those who prefer a hassle-free solution.
 
-Here are the main things I changed to make it work for my usecase: (migrate mulitple private repos, keep formatting)
+Notable Changes:
 
-- update authentication
-- use accountIDs to reference users because username/emails didn't work with my JIRA instance, configured in GDPR strict mode
-- handle jira markdown in issue description and comments (links, h1, h2, bold, italic etc...)
-- handle image re-upload (this one was tricky)
-- simplify things I didn't use (remove zenhub, priority and component management...)
-- use blake for formatting
+- Updated authentication (original method didn’t work for me).
+- User references now use account IDs (instead of usernames/emails, for GDPR-compliant Jira instances).
+- GitHub markdown converted to Jira formatting (headings, links, bold, italic, etc.).
+- Image re-upload support for private repositories protected by SSO (this was tricky!).
+- Removed unnecessary features (Zenhub integration, label-based priority/component management, etc.).
+- Formatted code using blake for consistency.
+- for the full details, go to the commit history!
 
-It worked for a March 2025 migration. Feel free to adapt it to your usecase!
-**Would you rather focus on what matters and pay a few hundred $ to have this migration handled for you? Jump to the end of this page!**
+It worked for a migration in March 2025. Feel free to adapt it to your usecase! **...and if you'd rather have your devs focus on what matters (your roadmap!) and pay a few hundred dollars to have this migration handled for you, jump to the end of this page!!**
 
 ## Prerequisites
 
@@ -81,6 +84,6 @@ Skip the setup : I offer a done-for-you migration service for a few hundred doll
 
 ✅ A fully managed migration, tailored to your use case
 ✅ A simple credit card payment link + invoice for easy expensing (no procurement delays or headaches)
-✅ A seamless transition so you can focus on what matters
+✅ A seamless transition so your devs can focus on what matters
 
 📩 Interested? Contact me here: [Migration Request Form](https://docs.google.com/forms/d/e/1FAIpQLSdF-CFw37gvnL2e2-IYMq3gTLhsLsMNbTGL_B_pv5lkftTDDA/viewform?usp=header), and let's make it happen! 🚀
