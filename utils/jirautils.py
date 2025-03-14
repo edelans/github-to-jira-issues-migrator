@@ -86,7 +86,7 @@ def do_transition(issue_key, target_status_name):
     return requests.post(url, headers=headers, json=data, auth=auth)
 
 
-def convert_gh_to_jira_markdown(string: str | None) -> (str, list):
+def convert_gh_to_jira_markdown(string: str | None):
     """Convert GitHub Markdown to Jira formatting and download images beforehand."""
     if not string:
         return "", []
