@@ -1,6 +1,8 @@
 # GitHub to Jira Migration
 
-A tool to migrate your Github issues into Jira issues.
+A tool to migrate your Github issues into Jira issues, as [demonstrated with this example](https://github.com/edelans/github-to-jira-issues-migrator/issues/1).
+
+![Image](https://github.com/user-attachments/assets/3004900d-4711-4957-82d8-79451d71ca50)
 
 This project is a fork from https://github.com/dhaiducek/github-to-jira-migration, itself largely inspired by the blog
 [How to migrate GitHub issues to Jira](https://zmcddn.github.io/how-to-migrate-github-issues-to-jira.html) by
@@ -16,6 +18,9 @@ Notable Changes:
 - Removed unnecessary features (Zenhub integration, label-based priority/component management, etc.).
 - Formatted code using blake for consistency.
 - for the full details, go to the commit history!
+
+Example of fomratting:
+![Image](https://github.com/user-attachments/assets/d695cd17-c813-41ef-b1e0-781cef715a6e)
 
 It worked for a migration in March 2025. Feel free to adapt it to your usecase! **...and if you'd rather have your devs focus on what matters (your roadmap!) and pay a few hundred dollars to have this migration handled for you, jump to the end of this page!!**
 
