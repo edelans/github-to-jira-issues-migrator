@@ -5,7 +5,7 @@ jira_product_versions = {}
 gh_repo_id = ""
 
 
-def user_map(gh_username, user_mapping, default_user=''):
+def user_map(gh_username, user_mapping, default_user=""):
     """Return the jira account id from the usermap"""
     assert user_mapping != None  # user_mapping cannot be None
 
@@ -21,40 +21,33 @@ def user_map(gh_username, user_mapping, default_user=''):
 def type_map(gh_labels):
     """Return the Jira issue type from a given GitHub label"""
 
-    type_map = {
-        'task': 'Task',
-        'bug': 'Bug',
-        'user_story': 'Story',
-        'Epic': 'Epic'
-    }
+    type_map = {"task": "Task", "bug": "Bug", "user_story": "Story", "Epic": "Epic"}
 
     for label in gh_labels:
-        label_name = str(label['name'])
+        label_name = str(label["name"])
         if label_name in type_map:
             return type_map[label_name]
 
-    return 'Task'
+    return "Task"
 
 
 def priority_map(gh_labels):
     """Return the Jira priority from a given GitHub label"""
 
     priority_map = {
-        'blocker (P0)': 'Blocker',
-        'Priority/P1': 'Critical',
-        'Priority/P2': 'Normal',
-        'Priority/P3': 'Minor',
+        "blocker (P0)": "Blocker",
+        "Priority/P1": "Critical",
+        "Priority/P2": "Normal",
+        "Priority/P3": "Minor",
     }
 
-    priority = {
-        'name': 'Undefined'
-    }
+    priority = {"name": "Undefined"}
 
     for label in gh_labels:
-        label_name = str(label['name'])
+        label_name = str(label["name"])
         if label_name in priority_map:
-            if priority_map[label_name] != '':
-                priority['name'] = priority_map[label_name]
+            if priority_map[label_name] != "":
+                priority["name"] = priority_map[label_name]
                 break
 
     return priority
@@ -64,21 +57,21 @@ def severity_map(gh_labels):
     """Return the Jira severity from a given GitHub label"""
 
     severity_map = {
-        'Severity 1 - Urgent': 'Critical',
-        'Severity 2 - Major': 'Moderate',
-        'Severity 3 - Minor': 'Low',
+        "Severity 1 - Urgent": "Critical",
+        "Severity 2 - Major": "Moderate",
+        "Severity 3 - Minor": "Low",
     }
 
     severity = {}
 
     for label in gh_labels:
-        label_name = str(label['name'])
+        label_name = str(label["name"])
         if label_name in severity_map:
-            if severity_map[label_name] != '':
-                severity['value'] = severity_map[label_name]
+            if severity_map[label_name] != "":
+                severity["value"] = severity_map[label_name]
                 break
 
-    if 'value' in severity:
+    if "value" in severity:
         return severity
 
     return None
@@ -89,23 +82,16 @@ def status_map(pipeline, issue_type):
 
     # Untriaged and Backlogs will remain in the state on creation ("New" or "To Do")
     pipeline_map = {
-        "In Progress": {
-            "Bug": "ASSIGNED",
-            "Default": "In Progress"
-        },
+        "In Progress": {"Bug": "ASSIGNED", "Default": "In Progress"},
         "Awaiting Verification": {
             "Bug": "ON_QA",
             "Default": "Review",
-            "Epic": "Testing"
+            "Epic": "Testing",
         },
         "Epics In Progress": "In Progress",
-        "Ready For Playback": {
-            "Bug": "ON_QA",
-            "Epic": "Testing",
-            "Default": "Review"
-        },
+        "Ready For Playback": {"Bug": "ON_QA", "Epic": "Testing", "Default": "Review"},
         "Awaiting Docs": "In Progress",
-        "Closed": "Closed"
+        "Closed": "Closed",
     }
 
     if pipeline in pipeline_map:
@@ -114,8 +100,8 @@ def status_map(pipeline, issue_type):
             return mapping_obj
         if issue_type in mapping_obj:
             return mapping_obj[issue_type]
-        if 'Default' in mapping_obj:
-            return mapping_obj['Default']
+        if "Default" in mapping_obj:
+            return mapping_obj["Default"]
 
     return None
 
@@ -124,12 +110,12 @@ def issue_map(gh_issue, user_mapping, default_user):
     """Return a dict for Jira to process from a given GitHub issue"""
     assert user_mapping != None  # user_mapping cannot be None
 
-    gh_labels = gh_issue['labels']
+    gh_labels = gh_issue["labels"]
 
     assignee = None
     contributors = []
-    for gh_assignee in gh_issue['assignees']:
-        assignee_id = user_map(gh_assignee['login'], user_mapping)
+    for gh_assignee in gh_issue["assignees"]:
+        assignee_id = user_map(gh_assignee["login"], user_mapping)
         if assignee_id:
             if assignee:
                 contributors.append(assignee_id)
@@ -137,37 +123,34 @@ def issue_map(gh_issue, user_mapping, default_user):
                 assignee = assignee_id
 
     # Make sure a string is returned for the issue body
-    issue_body = ''
-    if gh_issue['body']:
-        issue_body = gh_issue['body']
+    issue_body = ""
+    if gh_issue["body"]:
+        issue_body = gh_issue["body"]
 
-    issue_title = gh_issue['title']
+    issue_title = gh_issue["title"]
     issue_type = type_map(gh_labels)
 
     # Fetch repo ID if not already populated
     global gh_repo_id
     if gh_repo_id == "":
-        gh_repo_id = str(ghutils.get_repo()['id'])
-    
+        gh_repo_id = str(ghutils.get_repo()["id"])
 
     # Handle labels
     labels = []
     for label in gh_labels:
-        label_name = str(label['name'])
-        labels.append(label_name.replace(' ', '_'))
+        label_name = str(label["name"])
+        labels.append(label_name.replace(" ", "_"))
 
     issue_mapping = {
-        'issuetype': {
-            'name': issue_type
-        },
-        'components': [{'name': ghutils.repo}],
-        'summary': issue_title,
-        'description': issue_body,
-        'reporter': user_map(gh_issue['user']['login'], user_mapping, default_user),
-        'assignee': assignee,
-        'priority': priority_map(gh_labels),
-        'labels': labels,
-        jirautils.gh_issue_field: gh_issue['html_url']
+        "issuetype": {"name": issue_type},
+        "components": [{"name": ghutils.repo}],
+        "summary": issue_title,
+        "description": issue_body,
+        "reporter": user_map(gh_issue["user"]["login"], user_mapping, default_user),
+        "assignee": assignee,
+        "priority": priority_map(gh_labels),
+        "labels": labels,
+        jirautils.gh_issue_field: gh_issue["html_url"],
     }
 
     return issue_mapping
@@ -176,9 +159,7 @@ def issue_map(gh_issue, user_mapping, default_user):
 def comment_map(gh_comment):
     """Return a dict for Jira to process from a given GitHub comment"""
 
-    gh_user = gh_comment['user']['login']
+    gh_user = gh_comment["user"]["login"]
     comment_body_in_jira_md = jirautils.convert_gh_to_jira_markdown(gh_comment["body"])
 
-    return {
-        'body': f'{gh_comment["created_at"]} @{gh_user}\n{comment_body_in_jira_md}'
-    }
+    return {"body": f'{gh_comment["created_at"]} @{gh_user}\n{comment_body_in_jira_md}'}
