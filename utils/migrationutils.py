@@ -177,7 +177,8 @@ def comment_map(gh_comment):
     """Return a dict for Jira to process from a given GitHub comment"""
 
     gh_user = gh_comment['user']['login']
+    comment_body_in_jira_md = jirautils.convert_gh_to_jira_markdown(gh_comment["body"])
 
     return {
-        'body': f'{gh_comment["created_at"]} @{gh_user}\n{gh_comment["body"]}'
+        'body': f'{gh_comment["created_at"]} @{gh_user}\n{comment_body_in_jira_md}'
     }
