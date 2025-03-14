@@ -1,10 +1,20 @@
 # GitHub to Jira Migration
 
-Utilities to migrate GitHub issues to Jira
-
-Largely inspired by the blog
+This project was forked from https://github.com/dhaiducek/github-to-jira-migration, itself argely inspired by the blog
 [How to migrate GitHub issues to Jira](https://zmcddn.github.io/how-to-migrate-github-issues-to-jira.html) by
-[@zmcddn](https://github.com/zmcddn)
+[@zmcddn](https://github.com/zmcddn).
+
+Here are the main things I changed to make it work for my usecase: (migrate mulitple private repos, keep formatting)
+
+- update authentication
+- use accountIDs to reference users because username/emails didn't work with my JIRA instance, configured in GDPR strict mode
+- handle jira markdown in issue description and comments (links, h1, h2, bold, italic etc...)
+- handle image re-upload (this one was tricky)
+- simplify things I didn't use (remove zenhub, priority and component management...)
+- use blake for formatting
+
+It worked for a March 2025 migration. Feel free to adapt it to your usecase!
+**Would you rather focus on what matters and pay a few hundred $ to have this migration handled for you? Jump to the end of this page!**
 
 ## Prerequisites
 
@@ -58,12 +68,19 @@ different use case:
 - Update `root_url` in [`jirautils.py`](utils/jirautils.py)
 - Update `project_key`, `security_level`, and custom fields in [`jirautils.py`](utils/jirautils.py)
 - Update `org_repo` in [`ghutils.py`](utils/ghutils.py)
-- Update `workspace_id` in [`zenhubutils.py`](utils/zenhubutils.py)
-- Look at the mapping flows in [`migrationutils.py`](utils/migrationutils.py) (we heavily used labels in GitHub to
-  specify things like priority and component)
+- Look at the mapping flows in [`migrationutils.py`](utils/migrationutils.py) (to adapt it to your own usage of github and JIRA)
 
 ## Resources
 
 - [GitHub API](https://docs.github.com/en/rest)
 - [Jira API](https://docs.atlassian.com/software/jira/docs/api/REST/latest)
-- [ZenHub API](https://developers.zenhub.com/graphql-api-docs/getting-started)
+
+# 💡 Want a hassle-free migration?
+
+Skip the setup : I offer a done-for-you migration service for a few hundred dollars (depending on customization needs). You'll get:
+
+✅ A fully managed migration, tailored to your use case
+✅ A simple credit card payment link + invoice for easy expensing (no procurement delays or headaches)
+✅ A seamless transition so you can focus on what matters
+
+📩 Interested? Contact me here: [Migration Request Form](https://docs.google.com/forms/d/e/1FAIpQLSdF-CFw37gvnL2e2-IYMq3gTLhsLsMNbTGL_B_pv5lkftTDDA/viewform?usp=header), and let's make it happen! 🚀
