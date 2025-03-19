@@ -1,7 +1,7 @@
 {
-  "label_filter": "",
+  "label_filter": "NeedsJiraMigration",
   "label_exclusions": "",
-  "completion_label": "",
+  "completion_label": "Migrated",
   "default_jira_user": "jira-username/name/email",
   "component_map": {
     "gh-label": "jira-component"
