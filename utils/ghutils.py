@@ -3,8 +3,8 @@ import requests
 import os
 
 
-repo = "github-to-jira-issues-migrator"
-org_repo = "edelans/" + repo
+repo = "backend"
+org_repo = "waldoapp/" + repo
 root_url = "https://api.github.com/repos"
 base_url = f"{root_url}/{org_repo}/issues"
 

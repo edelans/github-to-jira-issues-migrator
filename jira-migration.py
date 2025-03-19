@@ -109,6 +109,10 @@ if len(gh_issues) == 0:
     print(f"  Label filter:     {label_filter}")
     print(f"  Label exclusions: {label_exclusions}")
 
+
+# ugly hack to be able to upload to jira images downloaded from gh comments.
+jira_comment_image_paths = []
+
 # Iterate over GitHub issues and collect mapping objects
 for gh_issue in gh_issues:
     if args.verbose:
@@ -119,10 +123,13 @@ for gh_issue in gh_issues:
     jira_issue_input = migrationutils.issue_map(gh_issue, user_map, default_user)
 
     # Collect comments from the GitHub issue
+    # TODO: refacto image management
     gh_comments = ghutils.get_issue_comments(gh_issue)
     jira_comment_input = []
     for comment in gh_comments:
-        jira_comment_input.append(migrationutils.comment_map(comment))
+        comment_object, image_paths = migrationutils.comment_map(comment)
+        jira_comment_input.append(comment_object)
+        jira_comment_image_paths += image_paths
 
     # Store issue mapping objects
     mapping_obj = {
@@ -185,6 +192,10 @@ for jira_map in jira_mappings:
 
     print(f"  * Adding comments from GitHub to new Jira issue {jira_key}")
     if not args.dry_run:
+        if jira_comment_image_paths:
+            print("📎 Uploading attachments...")
+            for image_path in jira_comment_image_paths:
+                jirautils.upload_image_to_jira(jira_key, image_path)
         for comment_map in jira_map["comments"]:
             if args.verbose:
                 print(comment_map)
